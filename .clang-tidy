@@ -1,0 +1,47 @@
+---
+Checks: >
+    bugprone-*,
+    -bugprone-easily-swappable-parameters,
+    -bugprone-reserved-identifier,
+    -bugprone-branch-clone,
+    performance-*,
+    -performance-no-int-to-ptr,
+    modernize-*,
+    -modernize-use-trailing-return-type,
+    -modernize-avoid-c-arrays,
+    -modernize-use-nodiscard,
+    -modernize-concat-nested-namespaces,
+    -modernize-return-braced-init-list,
+    cppcoreguidelines-*,
+    -cppcoreguidelines-avoid-magic-numbers,
+    -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+    -cppcoreguidelines-pro-bounds-constant-array-index,
+    -cppcoreguidelines-pro-type-reinterpret-cast,
+    -cppcoreguidelines-pro-type-union-access,
+    -cppcoreguidelines-owning-memory,
+    -cppcoreguidelines-avoid-c-arrays,
+    -cppcoreguidelines-macro-usage,
+    readability-misleading-indentation,
+    readability-redundant-*,
+    readability-simplify-*,
+    -readability-identifier-naming,
+    clang-analyzer-*,
+    -clang-analyzer-optin.performance.Padding,
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*'
+AnalyzeTemporaryDtors: false
+FormatStyle: file
+CheckOptions:
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.FunctionCase: camelBack
+  readability-identifier-naming.VariableCase: camelBack
+  readability-identifier-naming.MemberCase: camelBack
+  readability-identifier-naming.MethodCase: camelBack
+  readability-identifier-naming.ParameterCase: camelBack
+  readability-identifier-naming.ConstantCase: UPPER_CASE
+  readability-identifier-naming.ConstantPrefix: 'K'
+  readability-identifier-naming.GlobalConstantCase: UPPER_CASE
+  readability-identifier-naming.GlobalConstantPrefix: 'K'
+...

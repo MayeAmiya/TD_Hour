@@ -1,59 +1,113 @@
+**English** · [简体中文](README.zh-CN.md)
 
-# Command & Conquer Generals (inc. Zero Hour) Source Code
+# TD_Hour — Command & Conquer: Generals / Zero Hour Engine Reset
 
-This repository includes source code for Command & Conquer Generals, and its expansion pack Zero Hour. This release provides support to the Steam Workshop for both games ([C&C Generals](https://steamcommunity.com/workshop/browse/?appid=2229870) and [C&C Generals - Zero Hour](https://steamcommunity.com/workshop/browse/?appid=2732960)).
+> A reimplementation of the *Command & Conquer: Generals / Zero Hour* engine, based on the GPLv3-licensed source code released by Electronic Arts.
+> This is an independent fan project. It is not affiliated with or endorsed by Electronic Arts Inc. or its affiliates.
+> This repository does not include any original game assets; game data files must be provided by the user.
 
+**License**: GNU GPL v3 + EA Additional Terms | **Stack**: C++20 · Direct3D 12 · SDL3 · ECS | **Scale**: ~1,700 source files / ~480k lines of code
 
-## Dependencies
+---
 
-If you wish to rebuild the source code and tools successfully you will need to find or write new replacements (or remove the code using them entirely) for the following libraries;
+## Background
 
-- DirectX SDK (Version 9.0 or higher) (expected path `\Code\Libraries\DirectX\`)
-- STLport (4.5.3) - (expected path `\Code\Libraries\STLport-4.5.3`)
-- 3DSMax 4 SDK - (expected path `\Code\Libraries\Max4SDK\`)
-- NVASM - (expected path `\Code\Tools\NVASM\`)
-- BYTEmark - (expected path `\Code\Libraries\Source\Benchmark`)
-- RAD Miles Sound System SDK - (expected path `\Code\Libraries\Source\WWVegas\Miles6\`)
-- RAD Bink SDK - (expected path `\Code\GameEngineDevice\Include\VideoDevice\Bink`)
-- SafeDisk API - (expected path `\Code\GameEngine\Include\Common\SafeDisk` and `\Code\Tools\Launcher\SafeDisk\`)
-- Miles Sound System "Asimp3" - (expected path `\Code\Libraries\WPAudio\Asimp3`)
-- GameSpy SDK - (expected path `\Code\Libraries\Source\GameSpy\`)
-- ZLib (1.1.4) - (expected path `\Code\Libraries\Source\Compression\ZLib\`)
-- LZH-Light (1.0) - (expected path `\Code\Libraries\Source\Compression\LZHCompress\CompLibSource` and `CompLibHeader`)
+In 2025, Electronic Arts released the engine source code of *Generals / Zero Hour* under the GNU GPL v3 license. The codebase dates from 2003 and depends on legacy tooling that is no longer maintained (Visual C++ 6.0) and on several proprietary third-party libraries (DirectX 9 SDK, STLport, Miles Sound System, Bink Video, etc.), making it difficult to build and evolve with modern compilers, graphics APIs, and multiplayer environments.
 
+TD_Hour preserves the original rules, data formats, and game design while rewriting the entire runtime engine on a modern architecture, targeting current toolchains and rendering models and providing a foundation for long-term maintenance and extension.
 
-## Compiling (Win32 Only)
+---
 
-To use the compiled binaries, you must own the game. The C&C Ultimate Collection is available for purchase on [EA App](https://www.ea.com/en-gb/games/command-and-conquer/command-and-conquer-the-ultimate-collection/buy/pc) or [Steam](https://store.steampowered.com/bundle/39394/Command__Conquer_The_Ultimate_Collection/).
+## Technical Highlights
 
-The quickest way to build all configurations in the project is to open `rts.dsw` in Microsoft Visual Studio C++ 6.0 (SP6 recommended for binary matching to Generals patch 1.08 and Zero Hour patch 1.04) and select Build -> Batch Build, then hit the “Rebuild All” button.
+### 1. Modern Engine Rewrite
 
-If you wish to compile the code under a modern version of Microsoft Visual Studio, you can convert the legacy project file to a modern MSVC solution by opening `rts.dsw` in Microsoft Visual Studio .NET 2003, and then opening the newly created project and solution file in MSVC 2015 or newer.
+- Built with C++20 and the xmake build system; ~480k lines of code across ~1,700 source files
+- Modern Direct3D 12 rendering pipeline with a GPU memory allocator, DirectXMath, and a composable world-rendering pipeline
+- No dependency on any discontinued proprietary SDK
 
-NOTE: As modern versions of MSVC enforce newer revisions of the C++ standard, you will need to make extensive changes to the codebase before it successfully compiles, even more so if you plan on compiling for the Win64 platform.
+### 2. Layered Architecture
 
-When the workspace has finished building, the compiled binaries will be copied to the folder called `/Run/` found in the root of each games directory. 
+```
+src/app           Host layer: windowing, frame pacing, input dispatch, UI shell
+src/core          Foundation: math, containers, ECS, compression, debug tooling
+src/engine        Engine subsystems: rendering, audio, GUI, networking, resources, textures, video
+src/game          Game domain: commands, AI, navigation, objects, combat, production, scripts, scenarios
+src/presentation  Presentation layer: camera, render extraction, FX, UI projection
+```
 
+Each layer depends only on the layers beneath it and communicates through explicit contracts. The simulation layer is unaware of rendering frames, and the presentation layer does not access ECS internals, establishing clear responsibility boundaries between systems.
 
-## Known Issues
+### 3. Deterministic Simulation
 
-Windows has a policy where executables that contain words “version”, “update” or “install” in their filename will require UAC Elevation to run. This will affect “versionUpdate” and “buildVersionUpdate” projects from running as post-build events. Renaming the output binary name for these projects to not include these words should resolve the issue for you.
+Multiplayer synchronization, replay, and save/load all rely on determinism as a foundational property. Determinism has been a first-order design constraint since the project's inception:
 
+- Lockstep frame buffering with a matching packet codec (`LockstepFrameBuffer` / `LockstepPacketCodec`)
+- All orders commit only on confirmed ticks; execution results are merged in stable `ObjectId` / `ActionId` order
+- Simulation state is recorded through layered snapshots and journals covering orders, AI, weapons, and presentation events
+- Native replay and save/load support (`ReplayStorage` / `ReplayFileCodec`); action queues and domain runtimes are fully serializable
 
-## STLport
-STLport will require changes to successfully compile this source code. The file [stlport.diff](stlport.diff) has been provided for you so you can review and apply these changes. Please make sure you are using STLport 4.5.3 before attempting to apply the patch.
+The core constraint is that rendering frames, wall clocks, and thread completion ordering must never drive logical progression. Identical input sequences produce identical results at different frame rates (e.g., 30 FPS vs. 200 FPS), providing a reliable basis for multiplayer synchronization and replay.
 
+### 4. Data-Driven Performance
 
-## Contributing
+- Hot paths use an ECS (entt) with structure-of-arrays (SoA) layouts; AI state families, shadow batching, and avoidance kernels are cache-friendly SoA implementations
+- Parallel workloads are scheduled through taskflow task graphs; Tracy is integrated for profiling
+- Built on mimalloc (memory allocator), spdlog (logging), and fmt (formatting) as base components
 
-This repository will not be accepting contributions (pull requests, issues, etc). If you wish to create changes to the source code and encourage collaboration, please create a fork of the repository under your GitHub user/organization space.
+### 5. Generalization over Special-Casing
 
+- Paths are modeled as deterministic action sequences rather than coordinate lists. Each action is started, run, and terminated by its owning domain (movement, combat, ability, construction); the sequencer advances the queue only upon a terminal outcome, eliminating action-stitching failures, stuck nodes, and lost commands at the root
+- Target facts (`TargetFacts`) are separated from weapon/ability decision policy: target-state queries are decoupled from termination decisions, anti-air weapons do not misjudge ground targets, and in-flight projectiles are not rolled back when an order's target is lost
+- Sustained and limited behaviors (e.g., flame-wall sustained fire, MiG limited ammunition) are expressed through generic rules (`MaxShotsToFire`, action terminal semantics) rather than unit-name or ability-name special-casing
 
-## Support
+### 6. Presentation / Simulation Decoupling
 
-This repository is for preservation purposes only and is archived without support. 
+UI and rendering consume only confirmed, immutable snapshots; they neither read the ECS nor determine action completion:
 
+```
+Simulation action queue → confirmed tick → frame extractor → confirmed snapshot / journal → UI / Renderer
+```
 
-## License
+- Trails, explosions, animations, and audio are delivered with exactly-once semantics — neither lost nor duplicated
+- Allied paths are projected through presentation-extraction policies and filtered by observer visibility, keeping decision logic out of the UI
 
-This repository and its contents are licensed under the GPL v3 license, with additional terms applied. Please see [LICENSE.md](LICENSE.md) for details.
+### 7. Engineering & Maintenance
+
+- All 17 third-party dependencies are managed as git submodules with pinned versions; see [THIRD_PARTY.md](THIRD_PARTY.md)
+- One-command builds via xmake, with no dependence on legacy toolchain versions
+- Key design decisions are frozen in architecture documents (see [docs/](docs/)) so subsequent development follows the established architecture
+
+### 8. License Compliance
+
+- The GNU GPL v3 license and EA additional terms are preserved in full (see [LICENSE.md](LICENSE.md)); this is a legitimate derivative work
+- The repository contains no original game assets and therefore carries no asset-licensing risk; as a fork of the upstream repository, its lineage is directly traceable
+- This is a modified version of the upstream codebase and is never presented as the original program
+
+---
+
+## Building
+
+```bash
+git clone --recursive https://github.com/MayeAmiya/TD_Hour.git
+cd TD_Hour
+xmake
+```
+
+Third-party dependencies are managed as submodules; `--recursive` is required when cloning.
+
+> This repository does not ship game assets. Running the game requires the *Generals / Zero Hour* game data files (e.g., the C&C Ultimate Collection).
+
+---
+
+## Current Status
+
+The engine runs; core closed loops for commands, navigation, presentation, and audio have been established in an initial form. A number of runtime defects remain and are currently being addressed through controlled regression fixes; progress and confirmed issues are tracked in the project ledger.
+
+---
+
+## License & Acknowledgment
+
+This project is a derivative work of [electronicarts/CnC_Generals_Zero_Hour](https://github.com/electronicarts/CnC_Generals_Zero_Hour), released under the **GNU GPL v3** and **EA Additional Terms**; the full license text is available in [LICENSE.md](LICENSE.md).
+
+Per the additional terms: modified versions must not be presented as the original program; EA trademarks such as "Command & Conquer" must not be used to imply authorization, affiliation, or endorsement; and the program is provided "as is" without warranty of any kind.

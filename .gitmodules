@@ -1,0 +1,51 @@
+[submodule "third_party/D3D12MemoryAllocator"]
+	path = third_party/D3D12MemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator.git
+[submodule "third_party/DirectX-Headers"]
+	path = third_party/DirectX-Headers
+	url = https://github.com/microsoft/DirectX-Headers.git
+[submodule "third_party/DirectXMath"]
+	path = third_party/DirectXMath
+	url = https://github.com/microsoft/DirectXMath.git
+[submodule "third_party/enet"]
+	path = third_party/enet
+	url = https://github.com/lsalzman/enet.git
+[submodule "third_party/fmt"]
+	path = third_party/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "third_party/entt"]
+	path = third_party/entt
+	url = https://github.com/skypjack/entt.git
+[submodule "third_party/mimalloc"]
+	path = third_party/mimalloc
+	url = https://github.com/microsoft/mimalloc.git
+[submodule "third_party/freetype"]
+	path = third_party/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "third_party/spdlog"]
+	path = third_party/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "third_party/SDL3"]
+	path = third_party/SDL3
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "third_party/taskflow"]
+	path = third_party/taskflow
+	url = https://github.com/taskflow/taskflow.git
+[submodule "third_party/miniaudio"]
+	path = third_party/miniaudio
+	url = https://github.com/mackron/miniaudio.git
+[submodule "third_party/unordered_dense"]
+	path = third_party/unordered_dense
+	url = https://github.com/martinus/unordered_dense.git
+[submodule "third_party/vectorclass"]
+	path = third_party/vectorclass
+	url = https://github.com/vectorclass/version2.git
+[submodule "third_party/yaml-cpp"]
+	path = third_party/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "third_party/tracy"]
+	path = third_party/tracy
+	url = https://github.com/wolfpld/tracy.git
+[submodule "third_party/zlib"]
+	path = third_party/zlib
+	url = https://github.com/madler/zlib.git
